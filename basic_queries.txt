@@ -1,0 +1,385 @@
+-- MySQL Workbench Forward Engineering
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
+
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci ;
+SHOW WARNINGS;
+USE `mydb` ;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`record_label`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`record_label` (
+  `label_id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(25) NOT NULL,
+  `website` VARCHAR(50) NULL,
+  `phone` VARCHAR(15) NULL,
+  PRIMARY KEY (`label_id`),
+  UNIQUE INDEX `label_id_UNIQUE` (`label_id` ASC));
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`Album`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`Album` (
+  `album_id` INT NOT NULL AUTO_INCREMENT,
+  `album_name` VARCHAR(25) NOT NULL,
+  `no_of_tracks` INT NULL,
+  `year` VARCHAR(4) NULL,
+  `label_id` INT NULL,
+  `link` VARCHAR(100) NULL,
+  PRIMARY KEY (`album_id`),
+  INDEX `label_id_idx` (`label_id` ASC),
+  CONSTRAINT `label_id`
+    FOREIGN KEY (`label_id`)
+    REFERENCES `mydb`.`record_label` (`label_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`track`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`track` (
+  `track_id` INT NOT NULL AUTO_INCREMENT,
+  `track_name` VARCHAR(25) NULL,
+  `duration` VARCHAR(8) NOT NULL,
+  `buy_link` VARCHAR(100) NULL,
+  `album_id` INT NULL,
+  `genre_name` VARCHAR(10) NULL,
+  `votes` INT NULL,
+  `played` INT NULL,
+  `copies_sold` INT NULL,
+  PRIMARY KEY (`track_id`),
+  INDEX `album_id_idx` (`album_id` ASC),
+  CONSTRAINT `album_id1`
+    FOREIGN KEY (`album_id`)
+    REFERENCES `mydb`.`Album` (`album_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`Artists`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`Artists` (
+  `artist_id` INT NOT NULL AUTO_INCREMENT,
+  `artist_name` VARCHAR(25) NOT NULL,
+  `origin_year` VARCHAR(4) NULL,
+  `website_link` VARCHAR(50) NULL,
+  `no_of_albums` INT NULL,
+  `no_of_songs` INT NULL,
+  PRIMARY KEY (`artist_id`));
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`musician`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`musician` (
+  `musician_id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(25) NOT NULL,
+  `instrument` VARCHAR(20) NULL,
+  `hometown` VARCHAR(20) NULL,
+  PRIMARY KEY (`musician_id`));
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`artist_HAS_musician`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`artist_HAS_musician` (
+  `artist_id` INT NOT NULL,
+  `mucisian_id` INT NOT NULL,
+  INDEX `artist_id_idx` (`artist_id` ASC),
+  CONSTRAINT `artist_id`
+    FOREIGN KEY (`artist_id`)
+    REFERENCES `mydb`.`Artists` (`artist_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `musician_id`
+    FOREIGN KEY (`mucisian_id`)
+    REFERENCES `mydb`.`musician` (`musician_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`composed_by`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`composed_by` (
+  `track_id` INT NOT NULL,
+  `artist_id` INT NOT NULL,
+  INDEX `artist_id_idx` (`artist_id` ASC),
+  INDEX `track_id1_idx` (`track_id` ASC),
+  CONSTRAINT `track_id1`
+    FOREIGN KEY (`track_id`)
+    REFERENCES `mydb`.`track` (`track_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `artist_id1`
+    FOREIGN KEY (`artist_id`)
+    REFERENCES `mydb`.`Artists` (`artist_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`rating`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`rating` (
+  `user_id` INT NOT NULL,
+  `track_id` INT NOT NULL,
+  `votes` INT NULL,
+  PRIMARY KEY (`user_id`, `track_id`),
+  INDEX `track_id_idx` (`track_id` ASC),
+  CONSTRAINT `track_id`
+    FOREIGN KEY (`track_id`)
+    REFERENCES `mydb`.`track` (`track_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `mydb`.`user`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mydb`.`user` (
+  `user_id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(50) NOT NULL,
+  `age` VARCHAR(3) NULL,
+  `password` VARCHAR(50) NULL,
+  `d_admin_client` INT NULL,
+  `username` VARCHAR(50) NULL,
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `user_id`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `mydb`.`rating` (`user_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE);
+
+SHOW WARNINGS;
+USE `mydb`;
+
+DELIMITER $$
+SHOW WARNINGS$$
+USE `mydb`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`track_AFTER_INSERT` AFTER INSERT ON `track` FOR EACH ROW
+begin
+update Album set Album.no_of_tracks=Album.no_of_tracks+1 where Album.album_id=new.album_id;
+end$$
+
+SHOW WARNINGS$$
+SHOW WARNINGS$$
+USE `mydb`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`track_AFTER_DELETE` AFTER DELETE ON `track` FOR EACH ROW
+begin
+update Album set Album.no_of_tracks=Album.no_of_tracks-1 where Album.album_id=old.album_id;
+end$$
+
+SHOW WARNINGS$$
+SHOW WARNINGS$$
+USE `mydb`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `mydb`.`composed_by_AFTER_INSERT` AFTER INSERT ON `composed_by` FOR EACH ROW
+begin
+update Artists set no_of_songs=no_of_songs+1 where artist_id=new.artist_id;
+end$$
+
+SHOW WARNINGS$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- Data for table `mydb`.`record_label`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `mydb`;
+INSERT INTO `mydb`.`record_label` (`label_id`, `name`, `website`, `phone`) VALUES (1, 'studio for led zappllien', 'www.kdsjlkadjlk.com', '+91-9986037164');
+INSERT INTO `mydb`.`record_label` (`label_id`, `name`, `website`, `phone`) VALUES (2, 'studio for tool', NULL, '+91-8892225592');
+INSERT INTO `mydb`.`record_label` (`label_id`, `name`, `website`, `phone`) VALUES (3, 'studio for megadeth', NULL, '+91-9740868739');
+INSERT INTO `mydb`.`record_label` (`label_id`, `name`, `website`, `phone`) VALUES (4, 'studio for dhwesha', NULL, '+91-8895654565');
+INSERT INTO `mydb`.`record_label` (`label_id`, `name`, `website`, `phone`) VALUES (5, 'studio for opeth', NULL, '+91-7456891268');
+INSERT INTO `mydb`.`record_label` (`label_id`, `name`, `website`, `phone`) VALUES (6, 'studio for slash', NULL, '+91-8896548896');
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `mydb`.`Album`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `mydb`;
+INSERT INTO `mydb`.`Album` (`album_id`, `album_name`, `no_of_tracks`, `year`, `label_id`, `link`) VALUES (1, 'house of the holy', 8, '1973', 1, 'www.houseoftheholy.com');
+INSERT INTO `mydb`.`Album` (`album_id`, `album_name`, `no_of_tracks`, `year`, `label_id`, `link`) VALUES (2, 'coda', 8, '1982', 1, 'www.coda.com');
+INSERT INTO `mydb`.`Album` (`album_id`, `album_name`, `no_of_tracks`, `year`, `label_id`, `link`) VALUES (3, 'lateralus', 13, '2001', 2, 'www.latealus.com');
+INSERT INTO `mydb`.`Album` (`album_id`, `album_name`, `no_of_tracks`, `year`, `label_id`, `link`) VALUES (4, '10,000 days', 11, '2006', 2, 'www.10,000days.com');
+INSERT INTO `mydb`.`Album` (`album_id`, `album_name`, `no_of_tracks`, `year`, `label_id`, `link`) VALUES (5, 'sthoopa', 8, '2014', 4, 'www.dhweshasthoopa.com');
+INSERT INTO `mydb`.`Album` (`album_id`, `album_name`, `no_of_tracks`, `year`, `label_id`, `link`) VALUES (6, 'endgame', 11, '2009', 3, 'www.endgame.com');
+INSERT INTO `mydb`.`Album` (`album_id`, `album_name`, `no_of_tracks`, `year`, `label_id`, `link`) VALUES (8, 'heritage', 10, '2011', 5, 'www.heritage.com');
+INSERT INTO `mydb`.`Album` (`album_id`, `album_name`, `no_of_tracks`, `year`, `label_id`, `link`) VALUES (9, 'world on fire', 17, '2014', 6, 'http://worldonfierelkm');
+INSERT INTO `mydb`.`Album` (`album_id`, `album_name`, `no_of_tracks`, `year`, `label_id`, `link`) VALUES (10, 'still life', 7, '1999', 5, 'www.stilllife.com');
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `mydb`.`track`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `mydb`;
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (1, 'the song remains the same', '5:30', 'www.thesongremainsthesame.com', 1, '1', 4, 0, 1);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (2, 'the rain song', '7:40', 'www.therainsong.com', 1, '1', 5, 0, 5);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (3, 'over the hills', '4:50', 'www.overthehill.com', 1, '1', 6, 0, 6);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (4, 'the ocean', '4:29', 'www.theocean.com', 1, '1', 2, 0, 2);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (5, 'we\'re goona goove', '4:25', 'www.we\'regoona.com', 2, '1', 0, 0, 11);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (6, 'poor tom', '5:40', 'www.poortom.com', 2, '1', 0, 0, 3);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (7, 'darlene', '6:07', 'www.darlene.com', 2, '1', 0, 0, 546);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (8, 'the patient', '7:14', 'www.qwer.com', 3, '2', 0, 0, 5);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (9, 'the mantra', '1:32', 'www.fghjk.com', 3, '2', 0, 0, 2);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (10, 'parabol', '6:03', 'www.xyz.com', 3, '2', 0, 0, 31);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (11, '10,000 days', '11:14', 'www.hello.com', 4, '2', 0, 0, 5);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (12, 'vicarious', '7:14', 'www.aneesh.com', 4, '2', 0, 0, 6);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (13, 'the pot', '6:24', 'www.suhas.com', 4, '2', 0, 0, 7);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (14, 'yuddhabhumi', '6:38', 'www.k3.com', 5, '3', 0, 0, 5);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (15, 'ugra narashima', '3:24', 'www.vinay.com', 5, '3', 0, 0, 0);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (16, 'sattva bali', '6:25', 'www.raod.com', 5, '3', 0, 0, 2);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (17, '1320', '3:39', 'www.aneeshpriyal.com', 6, '6', 0, 0, 5);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (18, '44 minutes', '4:37', 'www.qwsa.com', 6, '6', 0, 0, 4);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (19, 'folklore', '8:15', 'www.vinay123.com', 7, '5', 0, 0, 7);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (20, 'world on fire', '4:31', 'www.last.fm', 8, '4', 0, 0, 9);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (21, 'the moor', '5:25', 'www.dkjfksdf.com', 9, '5', 0, 0, 8);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (23, 'jambi', '6:00', 'www.tool.com', 4, '5', 0, 0, 0);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (24, 'reflection', '7:00', 'tool', 4, '6', 0, 0, 0);
+INSERT INTO `mydb`.`track` (`track_id`, `track_name`, `duration`, `buy_link`, `album_id`, `genre_name`, `votes`, `played`, `copies_sold`) VALUES (25, 'triad', '7:00', 'tool.com', 4, '6', 0, 0, 0);
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `mydb`.`Artists`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `mydb`;
+INSERT INTO `mydb`.`Artists` (`artist_id`, `artist_name`, `origin_year`, `website_link`, `no_of_albums`, `no_of_songs`) VALUES (1, 'led zeppelin', '1969', 'www.ledzapplelin', 9, 90);
+INSERT INTO `mydb`.`Artists` (`artist_id`, `artist_name`, `origin_year`, `website_link`, `no_of_albums`, `no_of_songs`) VALUES (2, 'tool', '1992', 'www.tool.com', 6, 75);
+INSERT INTO `mydb`.`Artists` (`artist_id`, `artist_name`, `origin_year`, `website_link`, `no_of_albums`, `no_of_songs`) VALUES (3, 'dhwesha', '2008', 'www.dhwesha.com', 1, 8);
+INSERT INTO `mydb`.`Artists` (`artist_id`, `artist_name`, `origin_year`, `website_link`, `no_of_albums`, `no_of_songs`) VALUES (4, 'megadeth', '1983', 'www.megadeth.com', 14, 150);
+INSERT INTO `mydb`.`Artists` (`artist_id`, `artist_name`, `origin_year`, `website_link`, `no_of_albums`, `no_of_songs`) VALUES (5, 'slash', '1985', 'www.slash.com', 10, 98);
+INSERT INTO `mydb`.`Artists` (`artist_id`, `artist_name`, `origin_year`, `website_link`, `no_of_albums`, `no_of_songs`) VALUES (6, 'opeth', '1992', 'www.opeth.com', 11, 128);
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `mydb`.`musician`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `mydb`;
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (1, 'jimmy page', 'guitarist', 'manchester');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (2, 'john paul jones', 'bassist', 'manchester');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (3, 'maynard james keenan', 'vocalist', 'califonia');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (4, 'justin chancellor', 'bassist', 'london');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (5, 'adam jones', 'guitarist', 'califonia');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (6, 'somesha ', 'guitarist', 'bangalore');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (7, 'ajay', 'vocalist', 'bangalore');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (8, 'slash', 'guitarist', 'new york');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (9, 'myles kennedy', 'vocalist', 'los angels');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (10, 'mikael akerfeldt', 'vocalist', 'swedan');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (11, 'martin mendez', 'drummer', 'swedan');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (12, 'dave mustaine', 'vocalist', 'los angels');
+INSERT INTO `mydb`.`musician` (`musician_id`, `name`, `instrument`, `hometown`) VALUES (13, 'david ellefeson', 'bassist', 'los angels');
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `mydb`.`artist_HAS_musician`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `mydb`;
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (1, 1);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (1, 2);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (2, 3);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (2, 4);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (2, 5);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (3, 6);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (3, 7);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (4, 8);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (4, 9);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (5, 10);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (5, 11);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (6, 12);
+INSERT INTO `mydb`.`artist_HAS_musician` (`artist_id`, `mucisian_id`) VALUES (6, 13);
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `mydb`.`composed_by`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `mydb`;
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (1, 1);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (2, 1);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (3, 1);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (4, 1);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (5, 1);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (6, 1);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (7, 1);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (8, 2);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (9, 2);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (10, 2);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (11, 2);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (12, 2);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (13, 2);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (14, 3);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (15, 3);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (16, 3);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (17, 4);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (18, 4);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (19, 6);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (20, 5);
+INSERT INTO `mydb`.`composed_by` (`track_id`, `artist_id`) VALUES (21, 6);
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `mydb`.`rating`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `mydb`;
+INSERT INTO `mydb`.`rating` (`user_id`, `track_id`, `votes`) VALUES (1, 4, 8);
+INSERT INTO `mydb`.`rating` (`user_id`, `track_id`, `votes`) VALUES (2, 20, 5);
+INSERT INTO `mydb`.`rating` (`user_id`, `track_id`, `votes`) VALUES (1, 9, 9);
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `mydb`.`user`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `mydb`;
+INSERT INTO `mydb`.`user` (`user_id`, `name`, `age`, `password`, `d_admin_client`, `username`) VALUES (1, 'suhas', '19', 'awQSZX', 1, 'suhas');
+
+COMMIT;
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

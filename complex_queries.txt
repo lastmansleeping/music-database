@@ -1,0 +1,38 @@
+
+
+select artist_name, website_link, count(artist_id) from artists
+ where artist_id in (
+select artist_id from composed_by where track_id in(
+select track_id from track where album_id in(
+select album_id from album where label_id in(
+select label_id from record_label where name = 'studio a'
+)
+)
+)
+)
+group by artist_id;
+
+
+
+
+select avg(t.duration), a.album_name from Album a
+inner join track t
+on(t.album_id = a.album_id)
+where a.album_name = 'lateralus'
+group by t.album_id;
+
+
+select artist_name, website_link from Artists where artist_id in(
+select artist_id from composed_by where track_id in(
+select track_id from track where genre_name in(
+select genre_name from track where track_id in(
+select track_id from rating where user_id = 1 and votes = 
+(select max(votes) from rating where user_id=1)
+)
+)
+AND track_id not in (
+select track_id from rating where user_id = 1 and votes = 
+(select max(votes) from rating where user_id=1)
+)
+)
+);
